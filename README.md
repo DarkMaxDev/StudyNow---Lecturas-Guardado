@@ -2,7 +2,7 @@
 
 Next.js 14 + TypeScript + Tailwind + Framer Motion + react-pdf + MongoDB Atlas (Mongoose) + NextAuth.
 
-Plataoforma de uso personal para concentracion de estudio de libros, cursos en pdf y mas
+Plataforma de uso personal para concentracion de estudio de libros, cursos en pdf y mas.
 
 
 ## Configuración local
