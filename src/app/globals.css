@@ -1,0 +1,10 @@
+@tailwind base; @tailwind components; @tailwind utilities;
+:root { --ink: 250 245 255; --panel: 255 255 255; --mist: 49 20 110; --teal: 192 38 211; --a2: 219 39 119; }
+.dark { --ink: 10 10 10; --panel: 26 26 26; --mist: 236 236 236; --teal: 250 250 250; --a2: 163 163 163; }
+body { @apply bg-ink text-mist antialiased; }
+body .bg-panel { background-color: rgb(var(--panel) / 0.74); backdrop-filter: blur(16px); }
+.btn { @apply rounded-lg bg-gradient-to-r from-teal to-a2 px-4 py-2 text-sm font-semibold text-ink shadow-lg shadow-teal/30 transition hover:-translate-y-0.5 hover:brightness-110 disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal; }
+.btn-ghost { @apply rounded-lg border border-mist/20 px-3 py-2 text-sm transition hover:border-teal hover:bg-teal/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-teal; }
+.input { @apply w-full rounded-lg border border-mist/20 bg-ink/80 px-3 py-2 text-sm outline-none transition focus:border-teal focus:ring-2 focus:ring-teal/30; }
+.grad-text { @apply bg-gradient-to-r from-teal to-a2 bg-clip-text text-transparent; }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
