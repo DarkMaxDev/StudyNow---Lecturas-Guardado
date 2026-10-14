@@ -5,11 +5,9 @@ import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import ThemeToggle from "./ThemeToggle";
 
-// Polyfill para navegadores que aún no tienen Promise.withResolvers (requerido por pdf.js 4)
 if (typeof (Promise as any).withResolvers !== "function") {
   (Promise as any).withResolvers = function () { let resolve: any, reject: any; const promise = new Promise((a, b) => { resolve = a; reject = b; }); return { promise, resolve, reject }; };
 }
-// Worker desde CDN con la misma versión que usa react-pdf (no requiere archivos extra)
 pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
 type Media = { kind: "iframe" | "audio"; p: "yt" | "sp" | "sc" | "audio"; src: string; h: number };
@@ -47,6 +45,12 @@ export default function PdfViewer({ url, title }: { url: string; title: string }
   const ifr = useRef<HTMLIFrameElement>(null);
   const aud = useRef<HTMLAudioElement>(null);
 
+  // Detectar si la URL corresponde a Google Drive
+  const isGoogleDrive = /drive\.google\.com|docs\.google\.com/.test(url);
+  const pdfSourceUrl = isGoogleDrive
+    ? `/api/drive-proxy?url=${encodeURIComponent(url)}`
+    : `/api/pdf-proxy?url=${encodeURIComponent(url)}`;
+
   useEffect(() => {
     const el = box.current; if (!el) return;
     const ro = new ResizeObserver(() => setW(Math.min(el.clientWidth - 24, 900)));
@@ -68,7 +72,7 @@ export default function PdfViewer({ url, title }: { url: string; title: string }
     setMErr(""); setMedia(m);
     try { localStorage.setItem("pdfhub:music", mIn.trim()); } catch {}
   }
-  // Volumen: YouTube, SoundCloud y audio directo lo permiten; Spotify no expone control de volumen en su reproductor incrustado.
+  
   function applyVol(v: number) {
     if (!media) return;
     if (media.p === "audio" && aud.current) aud.current.volume = v / 100;
@@ -103,7 +107,7 @@ export default function PdfViewer({ url, title }: { url: string; title: string }
       </motion.div>
       <div className="flex-1 overflow-auto p-3">
         {err ? <p role="alert" className="mt-10 text-center">{err}</p> : (
-          <Document file={`/api/pdf-proxy?url=${encodeURIComponent(url)}`} onLoadSuccess={(d) => { setPages(d.numPages); setPage(1); }} onLoadError={(e) => { console.error(e); setErr(`No se pudo abrir este PDF (${e.message}). Verifica que el enlace sea un PDF público y directo.`); }}
+          <Document file={pdfSourceUrl} onLoadSuccess={(d) => { setPages(d.numPages); setPage(1); }} onLoadError={(e) => { console.error(e); setErr(`No se pudo abrir este PDF (${e.message}). Verifica que el enlace sea correcto y tenga permisos públicos o de acceso.`); }}
             loading={<div className="mt-24 flex flex-col items-center gap-3"><motion.div className="h-12 w-12 rounded-full border-4 border-teal border-t-transparent" animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 0.9, ease: "linear" }} /><p className="text-sm opacity-70">Cargando documento…</p></div>}>
             <AnimatePresence mode="wait">
               <motion.div key={page} initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -24 }} transition={{ duration: 0.22 }} className="mx-auto w-fit overflow-hidden rounded-lg shadow-2xl ring-1 ring-teal/30">
@@ -114,7 +118,6 @@ export default function PdfViewer({ url, title }: { url: string; title: string }
         )}
       </div>
 
-      {/* Música: el reproductor sigue sonando aunque se oculte el panel */}
       <div className="absolute bottom-4 right-4 z-30 flex w-[min(22rem,calc(100vw-2rem))] flex-col items-end gap-2">
         <div className={`${dock ? "block" : "hidden"} w-full space-y-2 rounded-2xl bg-panel p-3 shadow-2xl ring-1 ring-mist/15`}>
           <div className="flex gap-2">
